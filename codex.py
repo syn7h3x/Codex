@@ -21,65 +21,46 @@ required arguments:
   -c, --cipher CIPHER   The cipher method to decode
 
 optional arguments:
-  -A, --ascii          		Use ascii table instead of alphabet on Caesar Cipher
+  -A, --ascii          		    Use ascii table instead of alphabet on Caesar Cipher
 
-  -b, --bruteforce      	Caesar bruteforce mode
+  -b, --bruteforce      	    Caesar bruteforce mode
 
-  -h, --help            	show this help message and exit
+  -h, --help                	show this help message and exit
 
-  -k, --key KEY     		Specifies a key for vigenere
+  -k, --key KEY     	    	Specifies a key for vigenere
 
-  -l, --less            	Show only the decoded text
+  -l, --less            	    Show only the decoded text
 
-  -n, --num             	Show the numeric value instead of ASCII
+  -n, --num                 	Show the numeric value instead of ASCII
 
-  -o, --output OUTPUT   	Write the result in a file
+  -o, --output OUTPUT   	    Write the result in a file
 
-  -p, --punctuation     	Do not ignore ponctuations and other symbols
-
-  -q, --quiet           	Do not display the result on screen
+  -q, --quiet           	    Do not display the result on screen
 
   -r, --rotation ROTATION       Specifies Caesar Cipher rotation
 
   -s, --separator SEPARATOR 	Specifies the separator
 
-  -v, --verbose			Return even the failed tries
+  -v, --verbose			        Return even the failed tries
 
-  -w, --wordlist WORDLIST	Read a wordlist as key for vigenere
+  -w, --wordlist WORDLIST	    Read a wordlist as key for vigenere
 
 
 specific ciphers options:
-  Binary [-n]
-
-  Octal [-n]
-
-  Decimal [-n]
-
-  Hexadecimal [-n]
-
+  Binary, Octal, Decimal, Hexadecimal [-n]
   Base32
-
   Base64
-
   T9
-
-  AtBash 
-
-  A1Z26 [-s]
-
+  AtBash, ROT 13 [-p] 
+  A1Z26, MultiTap [-s]
   Morse
-
   GoldBug
-
-  ROT13
-
   Caesar {-r} [-b, -A]
-
   Vigenere {-k | -w}
 
   '''
 
-decoders = ['Base32', 'Base64', 'T9', 'A1Z26', 'Morse', 'GoldBug']
+decoders = ['Base32', 'Base64', 'T9', 'A1Z26', 'Morse', 'GoldBug', 'MultiTap']
 dicts = ['AtBash', 'ROT13']
 base_list = {'Binary': 2, 'Octal': 8, 'Decimal': 10, 'Hexadecimal': 16}
 sizes = {2: 8, 8: 3, 10: 3, 16: 2}
@@ -106,8 +87,6 @@ group2.add_argument("-c", "--cipher", help="The cipher method to decode", type=s
 parser.add_argument("-b", "--bruteforce", help='Caesar bruteforce method', action='store_true')
 parser.add_argument("-r", "--rotation", help='Specifies Caesar Cipher rotation', type=int, default=25)
 parser.add_argument('-A', '--ascii', help='Use ascii table instead of alphabet on Caesar Cipher', action='store_true')
-parser.add_argument('-p', '--punctuation', help="Do not ignore ponctuations and other symbols", action='store_false',
-                    default=True)
 parser.add_argument('-w', '--wordlist', help='Read a wordlist as key for vigenere')
 parser.add_argument('-k', '--key', help='Specifies a key for vigenere', default='', type=str)
 args = parser.parse_args()
@@ -151,14 +130,18 @@ cipher = ''
 file_out = ''
 vigenere_keys = args.key
 
-if not args.punctuation:
-    punctuation = ' '
-
 if args.wordlist:
     with open(args.wordlist, 'r') as wordlist:
+        lenght = 0
+        for i in args.cipher_text:
+            if i.lower() in alphabet:
+                lenght += 1
         for line in wordlist.readlines():
-            vigenere_keys += line[:len(args.cipher_text)] + '\n'
-        vigenere_keys = vigenere_keys.strip()
+            if len(line) > lenght:
+                vigenere_keys += line[:lenght] + '\n'
+            else:
+                vigenere_keys += line
+        vigenere_keys = vigenere_keys[:-1]
 
 if args.cipher is not None:
     cipher = args.cipher.lower()
@@ -302,6 +285,26 @@ def goldbug(text):
         if letter != " ":
             goldbug_decoded += GoldBug[letter]
         return goldbug_decoded
+
+
+def multitap(text, sep=args.separator):
+    multitap_decoded = ''
+    invalid_char = False
+    for char in text:
+        if char not in '023456789 ' + sep:
+            invalid_char = True
+            break
+    if not invalid_char:
+        if sep in text:
+            for word in text.split():
+                for char in word.split(sep):
+                    multitap_decoded += Multitap_table[char]
+                multitap_decoded += ' '
+        else:
+            for i in Multitap_table:
+                text = text.replace(i, Multitap_table[i])
+            multitap_decoded = text
+    return multitap_decoded
 
 
 def caesar(text, rot, bruteforce=False, ascii_mode=False):
