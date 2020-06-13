@@ -26,7 +26,6 @@ flags | description
 -l, --less | Return only the decoded text
 -n, --num, | Return the numeric value instead of ASCII
 -o, --output | Write the result in a file
--p, --punctuation | Do not ignore punctuations
 -q, --quiet | Do not print the result on screen
 -r, --rotation | Specifies Caesar Cipher rotation
 -s, --separator | Specifies a custom separator
